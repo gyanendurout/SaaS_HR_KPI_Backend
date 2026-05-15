@@ -5,9 +5,7 @@ const BASE_SELECT = `
   id, kpi_number, name, description, type, period, update_frequency,
   target_value, current_value, unit, start_date, end_date, next_due_date,
   allocation_pct, status, level, created_at, updated_at,
-  region_id, regions!kpis_region_id_fkey(name, code),
-  owner_id, owner:users!kpis_owner_id_fkey(id, full_name, email),
-  parent_id, parent:kpis!kpis_parent_id_fkey(id, kpi_number, name)
+  region_id, owner_id, parent_id
 `;
 
 const findAll = async ({ page = 1, limit = 20, status, owner_id, region_id } = {}) => {
@@ -30,7 +28,7 @@ const findAll = async ({ page = 1, limit = 20, status, owner_id, region_id } = {
 const findById = async (id) => {
   const { data, error } = await supabase
     .from('kpis')
-    .select(BASE_SELECT + `, kpi_contributors(id, user_id, role, allocation_pct, users!kpi_contributors_user_id_fkey(full_name, email))`)
+    .select(BASE_SELECT + `, kpi_contributors(id, user_id, role, allocation_pct)`)
     .eq('id', id)
     .single();
 
@@ -84,7 +82,7 @@ const cancel = async (id) => {
 const findChildren = async (parentId) => {
   const { data, error } = await supabase
     .from('kpis')
-    .select('id, kpi_number, name, status, allocation_pct, level, owner_id, owner:users!kpis_owner_id_fkey(full_name)')
+    .select('id, kpi_number, name, status, allocation_pct, level, owner_id')
     .eq('parent_id', parentId)
     .neq('status', 'cancelled')
     .order('kpi_number');

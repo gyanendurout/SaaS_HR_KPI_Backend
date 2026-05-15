@@ -19,8 +19,7 @@ const getCascade = async (parentId) => {
   const { data, error } = await supabase
     .from('kpis')
     .select(`
-      id, kpi_number, name, status, allocation_pct, level, next_due_date,
-      owner:users!kpis_owner_id_fkey(id, full_name)
+      id, kpi_number, name, status, allocation_pct, level, next_due_date, owner_id
     `)
     .eq('parent_id', parentId)
     .neq('status', 'cancelled')
