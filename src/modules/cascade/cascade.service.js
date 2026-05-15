@@ -28,7 +28,13 @@ const createChild = async (parentId, payload, createdBy) => {
   return kpisService.create(childPayload, createdBy);
 };
 
-const getCascade = (parentId) => cascadeRepo.getCascade(parentId);
+const getCascade = async (parentId) => {
+  const [parent, cascade] = await Promise.all([
+    kpisRepo.findById(parentId),
+    cascadeRepo.getCascade(parentId),
+  ]);
+  return { parent, ...cascade };
+};
 
 const removeChild = async (parentId, childId) => {
   const child = await kpisRepo.findById(childId);

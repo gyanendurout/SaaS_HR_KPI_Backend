@@ -4,8 +4,7 @@ const AppError = require('../../utils/AppError');
 const BASE_SELECT = `
   id, employee_code, full_name, email, phone,
   designation, department, status, is_admin, joined_at, profile_image,
-  region_id, regions!users_region_id_fkey(name, code),
-  manager_id, manager:users!users_manager_id_fkey(id, full_name)
+  region_id, manager_id
 `;
 
 const findAll = async ({ page = 1, limit = 20, search, status } = {}) => {
@@ -124,23 +123,34 @@ const findUserKpis = async (userId) => {
       .neq('status', 'cancelled'),
     supabase
       .from('kpi_contributors')
-      .select('kpi_id, kpis!kpi_contributors_kpi_id_fkey(id, kpi_number, name, status, level, target_value, current_value, next_due_date)')
-      .eq('user_id', userId)
-      .neq('kpis.status', 'cancelled'),
+      .select('kpi_id')
+      .eq('user_id', userId),
   ]);
 
   if (owned.error) throw new AppError(owned.error.message, 500, 'DB_ERROR');
   if (contributed.error) throw new AppError(contributed.error.message, 500, 'DB_ERROR');
 
-  // Merge and deduplicate by id (user may be both owner and contributor)
+  // Fetch contributed KPIs by ID
+  const contributedIds = (contributed.data || []).map((r) => r.kpi_id).filter(Boolean);
+  let contributedKpis = [];
+  if (contributedIds.length > 0) {
+    const { data: ck, error: cke } = await supabase
+      .from('kpis')
+      .select('id, kpi_number, name, status, level, target_value, current_value, next_due_date, unit, owner_id')
+      .in('id', contributedIds)
+      .neq('status', 'cancelled');
+    if (cke) throw new AppError(cke.message, 500, 'DB_ERROR');
+    contributedKpis = ck || [];
+  }
+
+  // Merge and deduplicate by id
   const seen = new Set();
   const results = [];
-  for (const row of [...(owned.data || [])]) {
+  for (const row of (owned.data || [])) {
     if (!seen.has(row.id)) { seen.add(row.id); results.push(row); }
   }
-  for (const row of (contributed.data || [])) {
-    const kpi = row.kpis;
-    if (kpi && !seen.has(kpi.id)) { seen.add(kpi.id); results.push(kpi); }
+  for (const row of contributedKpis) {
+    if (!seen.has(row.id)) { seen.add(row.id); results.push(row); }
   }
   return results.sort((a, b) => a.kpi_number.localeCompare(b.kpi_number));
 };

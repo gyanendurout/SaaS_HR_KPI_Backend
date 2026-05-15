@@ -3,14 +3,14 @@ const authService = require('./auth.service');
 const AppError = require('../../utils/AppError');
 
 const loginSchema = z.object({
-  email:    z.string().email(),
-  password: z.string().min(6),
+  email:    z.string().email('Required'),
+  password: z.string().min(1, 'Required'),
 });
 
 const login = async (req, res, next) => {
   const parsed = loginSchema.safeParse(req.body);
   if (!parsed.success) {
-    return next(new AppError(parsed.error.errors[0].message, 400, 'VALIDATION_ERROR'));
+    return next(new AppError('Required', 400, 'VALIDATION_ERROR'));
   }
 
   const result = await authService.login(parsed.data.email, parsed.data.password);
