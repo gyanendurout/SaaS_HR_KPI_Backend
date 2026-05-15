@@ -1,0 +1,350 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# JOOLA Track API — REST Client
+# Extension required: "REST Client" by Huachao Mao (humao.rest-client)
+#
+# HOW TO USE:
+#   1. Install "REST Client" from VS Code Extensions
+#   2. Click "Send Request" that appears above each ### block
+#   3. Start with "Login" — copy the access_token from the response
+#   4. Paste it into @token below
+# ══════════════════════════════════════════════════════════════════════════════
+
+@baseUrl   = http://localhost:4000
+@token     = PASTE_YOUR_JWT_TOKEN_HERE
+@userId    = PASTE_USER_ID_HERE
+@kpiId     = PASTE_KPI_ID_HERE
+@regionId  = PASTE_REGION_ID_HERE
+@childKpiId = PASTE_CHILD_KPI_ID_HERE
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# HEALTH
+# ─────────────────────────────────────────────────────────────────────────────
+
+### Health Check
+GET {{baseUrl}}/health
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AUTH
+# ─────────────────────────────────────────────────────────────────────────────
+
+### Login  ← Run this first, copy access_token → paste into @token above
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@joola.in",
+  "password": "your_password_here"
+}
+
+###
+
+### Get Current User (me)
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{token}}
+
+###
+
+### Logout
+POST {{baseUrl}}/api/auth/logout
+Authorization: Bearer {{token}}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# REGIONS  ← Run List Regions to get a regionId for KPI tests
+# ─────────────────────────────────────────────────────────────────────────────
+
+### List Regions
+GET {{baseUrl}}/api/regions
+Authorization: Bearer {{token}}
+
+###
+
+### Get Region by ID
+GET {{baseUrl}}/api/regions/{{regionId}}
+Authorization: Bearer {{token}}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# USERS
+# ─────────────────────────────────────────────────────────────────────────────
+
+### List Users
+GET {{baseUrl}}/api/users?page=1&limit=20
+Authorization: Bearer {{token}}
+
+###
+
+### List Users — search by name/email
+GET {{baseUrl}}/api/users?search=priya&page=1&limit=20
+Authorization: Bearer {{token}}
+
+###
+
+### List Users — filter by status
+GET {{baseUrl}}/api/users?status=active&limit=20
+Authorization: Bearer {{token}}
+
+###
+
+### Get User by ID
+GET {{baseUrl}}/api/users/{{userId}}
+Authorization: Bearer {{token}}
+
+###
+
+### Create User  [ADMIN ONLY]
+# Copy the returned id → paste into @userId above
+POST {{baseUrl}}/api/users
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "full_name": "Priya Sharma",
+  "email": "priya.sharma@joola.in",
+  "password": "SecurePass@123",
+  "phone": "+91 98765 43210",
+  "designation": "KPI Manager",
+  "department": "Operations",
+  "region_id": "{{regionId}}",
+  "is_admin": false
+}
+
+###
+
+### Update User  [ADMIN ONLY]
+PUT {{baseUrl}}/api/users/{{userId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "designation": "Senior KPI Manager",
+  "department": "Strategy"
+}
+
+###
+
+### Deactivate User  [ADMIN ONLY]
+DELETE {{baseUrl}}/api/users/{{userId}}
+Authorization: Bearer {{token}}
+
+###
+
+### Get User's Direct Reports
+GET {{baseUrl}}/api/users/{{userId}}/reports
+Authorization: Bearer {{token}}
+
+###
+
+### Get User's KPIs (owned + contributing)
+GET {{baseUrl}}/api/users/{{userId}}/kpis
+Authorization: Bearer {{token}}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# KPIs
+# ─────────────────────────────────────────────────────────────────────────────
+
+### List KPIs
+GET {{baseUrl}}/api/kpis?page=1&limit=20
+Authorization: Bearer {{token}}
+
+###
+
+### List KPIs — filter by status
+GET {{baseUrl}}/api/kpis?status=active&page=1&limit=20
+Authorization: Bearer {{token}}
+
+###
+
+### List KPIs — filter by region
+GET {{baseUrl}}/api/kpis?region_id={{regionId}}&limit=20
+Authorization: Bearer {{token}}
+
+###
+
+### List KPIs — filter by owner
+GET {{baseUrl}}/api/kpis?owner_id={{userId}}&limit=20
+Authorization: Bearer {{token}}
+
+###
+
+### Create KPI  ← Copy returned id → paste into @kpiId above
+POST {{baseUrl}}/api/kpis
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "India Revenue Growth FY26",
+  "description": "Overall revenue growth target for India region",
+  "type": "quantitative",
+  "period": "annual",
+  "update_frequency": "monthly",
+  "target_value": 1000000,
+  "unit": "USD",
+  "start_date": "2026-04-01",
+  "end_date": "2027-03-31",
+  "allocation_pct": 100,
+  "region_id": "{{regionId}}",
+  "owner_id": "{{userId}}"
+}
+
+###
+
+### Get KPI by ID
+GET {{baseUrl}}/api/kpis/{{kpiId}}
+Authorization: Bearer {{token}}
+
+###
+
+### Update KPI — update progress
+PUT {{baseUrl}}/api/kpis/{{kpiId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "current_value": 250000,
+  "status": "active"
+}
+
+###
+
+### Update KPI — change frequency (recalculates next_due_date)
+PUT {{baseUrl}}/api/kpis/{{kpiId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "update_frequency": "quarterly"
+}
+
+###
+
+### Cancel KPI
+DELETE {{baseUrl}}/api/kpis/{{kpiId}}
+Authorization: Bearer {{token}}
+
+###
+
+### Get KPI Direct Children
+GET {{baseUrl}}/api/kpis/{{kpiId}}/children
+Authorization: Bearer {{token}}
+
+###
+
+### Get Full KPI Tree (recursive)
+# Requires 003_rpc_functions.sql to be run in Supabase first
+GET {{baseUrl}}/api/kpis/{{kpiId}}/tree
+Authorization: Bearer {{token}}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# KPI CASCADE
+# ─────────────────────────────────────────────────────────────────────────────
+
+### Create Child KPI (Cascade under {{kpiId}})
+# Copy returned id → paste into @childKpiId above
+# allocation_pct must fit within parent's remaining %
+POST {{baseUrl}}/api/kpis/{{kpiId}}/cascade
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "North India Sales Q1",
+  "type": "quantitative",
+  "period": "quarterly",
+  "update_frequency": "monthly",
+  "target_value": 300000,
+  "unit": "USD",
+  "allocation_pct": 30,
+  "owner_id": "{{userId}}"
+}
+
+###
+
+### Get Cascade Summary (children + allocated % + remaining %)
+GET {{baseUrl}}/api/kpis/{{kpiId}}/cascade
+Authorization: Bearer {{token}}
+
+###
+
+### Remove Child KPI (cancel it)
+DELETE {{baseUrl}}/api/kpis/{{kpiId}}/cascade/{{childKpiId}}
+Authorization: Bearer {{token}}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# KPI CONTRIBUTORS
+# ─────────────────────────────────────────────────────────────────────────────
+
+### Add / Update Contributor
+# Upsert — if user already exists their role/pct is updated
+POST {{baseUrl}}/api/kpis/{{kpiId}}/contributors
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "user_id": "{{userId}}",
+  "role": "contributor",
+  "allocation_pct": 50
+}
+
+###
+
+### Remove Contributor
+DELETE {{baseUrl}}/api/kpis/{{kpiId}}/contributors/{{userId}}
+Authorization: Bearer {{token}}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ERROR / EDGE CASE TESTS
+# ─────────────────────────────────────────────────────────────────────────────
+
+### Login with wrong password → INVALID_CREDENTIALS
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@joola.in",
+  "password": "wrongpassword"
+}
+
+###
+
+### No token → UNAUTHORIZED
+GET {{baseUrl}}/api/kpis
+
+###
+
+### Invalid token → UNAUTHORIZED
+GET {{baseUrl}}/api/kpis
+Authorization: Bearer this.is.not.valid
+
+###
+
+### Malformed JSON → BAD_REQUEST 400
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{ bad json here
+
+###
+
+### Unknown route → NOT_FOUND 404
+GET {{baseUrl}}/api/does-not-exist
+
+###
+
+### Allocation overflow test
+# Create a second child that pushes total > 100%
+# (First child above was 30%, this one requests 80% → total 110% → 409)
+POST {{baseUrl}}/api/kpis/{{kpiId}}/cascade
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Overflow Child KPI",
+  "allocation_pct": 80,
+  "region_id": "{{regionId}}"
+}
