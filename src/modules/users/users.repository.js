@@ -15,7 +15,12 @@ const findAll = async ({ page = 1, limit = 20, search, status } = {}) => {
     .range((page - 1) * limit, page * limit - 1);
 
   if (status) query = query.eq('status', status);
-  if (search) query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`);
+  if (search) {
+    // Strip PostgREST filter delimiters and ilike wildcards so untrusted input
+    // can't break out of the search expression into additional filters.
+    const safe = String(search).replace(/[,()%*]/g, '').trim();
+    if (safe) query = query.or(`full_name.ilike.%${safe}%,email.ilike.%${safe}%`);
+  }
 
   const { data, error, count } = await query;
   if (error) throw new AppError(error.message, 500, 'DB_ERROR');

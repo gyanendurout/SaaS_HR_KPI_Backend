@@ -3,7 +3,8 @@ const { supabase } = require('../../config/supabase');
 const AppError = require('../../utils/AppError');
 
 const computeNextDueDate = (startDate, frequency) => {
-  const base = startDate ? new Date(startDate) : new Date();
+  let base = startDate ? new Date(startDate) : new Date();
+  if (Number.isNaN(base.getTime())) base = new Date();
   const map = { weekly: 7, monthly: 30, quarterly: 90 };
   const days = map[frequency] || 30;
   base.setDate(base.getDate() + days);

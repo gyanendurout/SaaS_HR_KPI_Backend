@@ -21,7 +21,10 @@ const findAll = async ({ page = 1, limit = 30, entity_type, actor_id, action } =
 
   if (entity_type) query = query.eq('entity_type', entity_type);
   if (actor_id)    query = query.eq('actor_id', actor_id);
-  if (action)      query = query.ilike('action', `%${action}%`);
+  if (action) {
+    const safe = String(action).replace(/[,()%*]/g, '').trim();
+    if (safe) query = query.ilike('action', `%${safe}%`);
+  }
 
   const { data, error, count } = await query;
   if (error) throw new AppError(error.message, 500, 'DB_ERROR');
