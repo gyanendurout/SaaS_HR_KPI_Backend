@@ -14,6 +14,7 @@ const notificationsRouter = require('./modules/notifications/notifications.route
 const auditRouter = require('./modules/audit/audit.router');
 
 const app = express();
+app.set('trust proxy', 1); // Trust Vercel's proxy
 
 // ── Security headers ──────────────────────────────────────────────────────────
 app.use(helmet());
