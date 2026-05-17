@@ -22,4 +22,15 @@ const findById = async (id) => {
   return data;
 };
 
-module.exports = { findAll, findById };
+const create = async ({ name, code }) => {
+  const { data, error } = await supabase
+    .from('regions')
+    .insert({ name, code: code.toUpperCase() })
+    .select('id, name, code, created_at')
+    .single();
+
+  if (error) throw new AppError(error.message, 400, 'DB_ERROR');
+  return data;
+};
+
+module.exports = { findAll, findById, create };
