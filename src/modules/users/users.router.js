@@ -9,7 +9,8 @@ router.get('/',                      catchAsync(usersController.list));
 router.post('/',         adminOnly,  catchAsync(usersController.create));
 router.get('/:id',                   catchAsync(usersController.getById));
 router.put('/:id',       adminOnly,  catchAsync(usersController.update));
-router.delete('/:id',    adminOnly,  catchAsync(usersController.deactivate));
+router.delete('/:id',             adminOnly, catchAsync(usersController.deactivate));
+router.delete('/:id/permanent',   adminOnly, catchAsync(usersController.hardDelete));
 router.get('/:id/reports',           catchAsync(usersController.directReports));
 router.get('/:id/kpis',              catchAsync(usersController.kpis));
 

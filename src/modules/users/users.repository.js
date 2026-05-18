@@ -160,4 +160,9 @@ const findUserKpis = async (userId) => {
   return results.sort((a, b) => a.kpi_number.localeCompare(b.kpi_number));
 };
 
-module.exports = { findAll, findById, findByAuthId, getNextEmployeeCode, create, update, deactivate, findDirectReports, findUserKpis };
+const hardDelete = async (id) => {
+  const { error } = await supabase.from('users').delete().eq('id', id);
+  if (error) throw new AppError(error.message, 500, 'DB_ERROR');
+};
+
+module.exports = { findAll, findById, findByAuthId, getNextEmployeeCode, create, update, deactivate, hardDelete, findDirectReports, findUserKpis };

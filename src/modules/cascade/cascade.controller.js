@@ -62,4 +62,17 @@ const removeContributor = async (req, res) => {
   res.json({ success: true, data });
 };
 
-module.exports = { createChild, getCascade, removeChild, addContributor, removeContributor };
+const linkChildSchema = z.object({
+  allocation_pct: z.number().min(0.01).max(100),
+});
+
+const linkChild = async (req, res, next) => {
+  const parsed = linkChildSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return next(new AppError(parsed.error.errors[0].message, 400, 'VALIDATION_ERROR'));
+  }
+  const data = await cascadeService.linkChild(req.params.id, req.params.childId, parsed.data.allocation_pct);
+  res.json({ success: true, data });
+};
+
+module.exports = { createChild, getCascade, removeChild, linkChild, addContributor, removeContributor };

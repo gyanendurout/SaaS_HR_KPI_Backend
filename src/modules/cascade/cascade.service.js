@@ -56,4 +56,19 @@ const removeContributor = async (kpiId, userId) => {
   return { kpi_id: kpiId, user_id: userId, removed: true };
 };
 
-module.exports = { createChild, getCascade, removeChild, addContributor, removeContributor };
+const linkChild = async (parentId, childId, allocationPct) => {
+  if (childId === parentId) throw new AppError('Cannot link a KPI to itself', 400, 'VALIDATION_ERROR');
+  await kpisRepo.findById(parentId);
+  await kpisRepo.findById(childId);
+  const usedPct = await cascadeRepo.getAllocatedPct(parentId);
+  if (usedPct + allocationPct > 100) {
+    throw new AppError(
+      `Allocation overflow: parent has ${(100 - usedPct).toFixed(0)}% remaining, requested ${allocationPct}%`,
+      409,
+      'ALLOCATION_OVERFLOW'
+    );
+  }
+  return cascadeRepo.linkChild(parentId, childId, allocationPct);
+};
+
+module.exports = { createChild, getCascade, removeChild, linkChild, addContributor, removeContributor };

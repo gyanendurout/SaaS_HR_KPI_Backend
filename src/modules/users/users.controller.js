@@ -75,4 +75,9 @@ const kpis = async (req, res) => {
   res.json({ success: true, data });
 };
 
-module.exports = { list, getById, create, update, deactivate, directReports, kpis };
+const hardDelete = async (req, res) => {
+  await usersService.hardDelete(req.params.id);
+  res.json({ success: true });
+};
+
+module.exports = { list, getById, create, update, deactivate, hardDelete, directReports, kpis };

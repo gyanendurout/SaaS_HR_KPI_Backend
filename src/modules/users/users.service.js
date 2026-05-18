@@ -55,4 +55,17 @@ const userKpis = async (userId) => {
   return usersRepo.findUserKpis(userId);
 };
 
-module.exports = { list, getById, create, update, deactivate, directReports, userKpis };
+const hardDelete = async (id) => {
+  await usersRepo.findById(id);
+  const { data: authRow } = await supabaseAdmin
+    .from('users')
+    .select('auth_id')
+    .eq('id', id)
+    .single();
+  if (authRow?.auth_id) {
+    await supabaseAdmin.auth.admin.deleteUser(authRow.auth_id).catch(() => {});
+  }
+  await usersRepo.hardDelete(id);
+};
+
+module.exports = { list, getById, create, update, deactivate, hardDelete, directReports, userKpis };

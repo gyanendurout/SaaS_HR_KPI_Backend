@@ -67,4 +67,22 @@ const removeContributor = async (kpiId, userId) => {
   return true;
 };
 
-module.exports = { getAllocatedPct, getCascade, cancelKpi, upsertContributor, removeContributor };
+const linkChild = async (parentId, childId, allocationPct) => {
+  const { data, error } = await supabase
+    .from('kpis')
+    .update({ parent_id: parentId, allocation_pct: allocationPct, updated_at: new Date().toISOString() })
+    .eq('id', childId)
+    .select('id, kpi_number, name, status, allocation_pct, parent_id')
+    .single();
+
+  if (error) {
+    if (error.message.includes('Cascade allocation overflow')) {
+      throw new AppError(error.message, 409, 'ALLOCATION_OVERFLOW');
+    }
+    throw new AppError(error.message, 500, 'DB_ERROR');
+  }
+  if (!data) throw new AppError('KPI not found', 404, 'NOT_FOUND');
+  return data;
+};
+
+module.exports = { getAllocatedPct, getCascade, cancelKpi, linkChild, upsertContributor, removeContributor };
