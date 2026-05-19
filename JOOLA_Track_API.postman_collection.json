@@ -1,0 +1,551 @@
+{
+  "info": {
+    "name": "JOOLA Track API",
+    "_postman_id": "joola-track-api-v1",
+    "description": "Complete API collection for JOOLA Track — KPI lifecycle management platform.\n\n## Setup\n1. Import this collection.\n2. Create an Environment with variable `base_url` = `http://localhost:4000` (or your production URL).\n3. Run **Auth → Login** first — the collection auto-saves the token to `{{token}}`.\n4. All subsequent requests use `Bearer {{token}}` automatically.\n\n## Auth\nAll `/api/*` routes (except `/api/auth/login`) require `Authorization: Bearer {{token}}`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url",  "value": "http://localhost:4000", "type": "string" },
+    { "key": "token",     "value": "",                      "type": "string" },
+    { "key": "kpi_id",    "value": "REPLACE_WITH_KPI_UUID", "type": "string" },
+    { "key": "user_id",   "value": "REPLACE_WITH_USER_UUID","type": "string" },
+    { "key": "region_id", "value": "REPLACE_WITH_REGION_UUID","type": "string" },
+    { "key": "approval_id","value":"REPLACE_WITH_APPROVAL_UUID","type":"string" },
+    { "key": "template_id","value":"REPLACE_WITH_TEMPLATE_UUID","type":"string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+
+    {
+      "name": "🔑 Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "const res = pm.response.json();",
+                "if (res.success && res.data?.access_token) {",
+                "  pm.collectionVariables.set('token', res.data.access_token);",
+                "  console.log('Token saved.');",
+                "}"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@joola.in\",\n  \"password\": \"yourpassword\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api","auth","login"] }
+          }
+        },
+        {
+          "name": "Get Current User (me)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/auth/me", "host": ["{{base_url}}"], "path": ["api","auth","me"] }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/api/auth/logout", "host": ["{{base_url}}"], "path": ["api","auth","logout"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🌍 Regions",
+      "item": [
+        {
+          "name": "List Regions",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/regions", "host": ["{{base_url}}"], "path": ["api","regions"] }
+          }
+        },
+        {
+          "name": "Get Region by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/regions/{{region_id}}", "host": ["{{base_url}}"], "path": ["api","regions","{{region_id}}"] }
+          }
+        },
+        {
+          "name": "Create Region",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Middle East\",\n  \"code\": \"ME\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/regions", "host": ["{{base_url}}"], "path": ["api","regions"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "👤 Users",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/users?page=1&limit=20&status=active&search=",
+              "host": ["{{base_url}}"],
+              "path": ["api","users"],
+              "query": [
+                { "key": "page",   "value": "1",      "description": "Page number (default 1)" },
+                { "key": "limit",  "value": "20",     "description": "Items per page (max 100)" },
+                { "key": "status", "value": "active", "description": "Filter: active | inactive" },
+                { "key": "search", "value": "",       "description": "Search by name / email" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/users/{{user_id}}", "host": ["{{base_url}}"], "path": ["api","users","{{user_id}}"] }
+          }
+        },
+        {
+          "name": "Create User (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\":   \"Jane Doe\",\n  \"email\":       \"jane.doe@joola.in\",\n  \"password\":    \"SecurePass123\",\n  \"phone\":       \"+91 9876543210\",\n  \"designation\": \"Regional Manager\",\n  \"department\":  \"Sales\",\n  \"region_id\":   \"{{region_id}}\",\n  \"manager_id\":  null,\n  \"is_admin\":    false,\n  \"joined_at\":   \"2024-01-15\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/users", "host": ["{{base_url}}"], "path": ["api","users"] }
+          }
+        },
+        {
+          "name": "Update User (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\":   \"Jane Smith\",\n  \"designation\": \"Senior Manager\",\n  \"department\":  \"Sales\",\n  \"region_id\":   \"{{region_id}}\",\n  \"manager_id\":  null,\n  \"is_admin\":    false\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/users/{{user_id}}", "host": ["{{base_url}}"], "path": ["api","users","{{user_id}}"] }
+          }
+        },
+        {
+          "name": "Deactivate User (Admin)",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/api/users/{{user_id}}", "host": ["{{base_url}}"], "path": ["api","users","{{user_id}}"] }
+          }
+        },
+        {
+          "name": "Hard Delete User (Admin)",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/api/users/{{user_id}}/permanent", "host": ["{{base_url}}"], "path": ["api","users","{{user_id}}","permanent"] }
+          }
+        },
+        {
+          "name": "Get Direct Reports",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/users/{{user_id}}/reports", "host": ["{{base_url}}"], "path": ["api","users","{{user_id}}","reports"] }
+          }
+        },
+        {
+          "name": "Get User's KPIs",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/users/{{user_id}}/kpis", "host": ["{{base_url}}"], "path": ["api","users","{{user_id}}","kpis"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "📊 KPIs",
+      "item": [
+        {
+          "name": "List KPIs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/kpis?page=1&limit=20&status=&owner_id=&region_id=",
+              "host": ["{{base_url}}"],
+              "path": ["api","kpis"],
+              "query": [
+                { "key": "page",      "value": "1",  "description": "Page number" },
+                { "key": "limit",     "value": "20", "description": "Items per page (max 100)" },
+                { "key": "status",    "value": "",   "description": "draft | active | completed | cancelled" },
+                { "key": "owner_id",  "value": "",   "description": "Filter by owner UUID" },
+                { "key": "region_id", "value": "",   "description": "Filter by region UUID" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get KPI by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/kpis/{{kpi_id}}", "host": ["{{base_url}}"], "path": ["api","kpis","{{kpi_id}}"] }
+          }
+        },
+        {
+          "name": "Create KPI",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\":             \"Revenue Growth — India FY2025\",\n  \"description\":      \"Achieve 15% YoY revenue growth for India region\",\n  \"type\":             \"quantitative\",\n  \"period\":           \"annual\",\n  \"update_frequency\": \"monthly\",\n  \"target_value\":     100000000,\n  \"unit\":             \"$\",\n  \"start_date\":       \"2025-04-01\",\n  \"end_date\":         \"2026-03-31\",\n  \"allocation_pct\":   100,\n  \"region_id\":        \"{{region_id}}\",\n  \"owner_id\":         \"{{user_id}}\",\n  \"parent_id\":        null\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/kpis", "host": ["{{base_url}}"], "path": ["api","kpis"] }
+          }
+        },
+        {
+          "name": "Update KPI",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\":             \"Revenue Growth — India FY2025 (Revised)\",\n  \"current_value\":    45000000,\n  \"status\":           \"active\",\n  \"target_value\":     110000000,\n  \"update_frequency\": \"monthly\",\n  \"owner_id\":         \"{{user_id}}\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/kpis/{{kpi_id}}", "host": ["{{base_url}}"], "path": ["api","kpis","{{kpi_id}}"] }
+          }
+        },
+        {
+          "name": "Cancel KPI",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/api/kpis/{{kpi_id}}", "host": ["{{base_url}}"], "path": ["api","kpis","{{kpi_id}}"] }
+          }
+        },
+        {
+          "name": "Get KPI Children",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/kpis/{{kpi_id}}/children", "host": ["{{base_url}}"], "path": ["api","kpis","{{kpi_id}}","children"] }
+          }
+        },
+        {
+          "name": "Get KPI Tree (recursive)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/kpis/{{kpi_id}}/tree", "host": ["{{base_url}}"], "path": ["api","kpis","{{kpi_id}}","tree"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🔗 Cascade",
+      "item": [
+        {
+          "name": "Get Cascade Summary",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/kpis/{{kpi_id}}/cascade", "host": ["{{base_url}}"], "path": ["api","kpis","{{kpi_id}}","cascade"] }
+          }
+        },
+        {
+          "name": "Create Child KPI",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\":             \"India North Revenue\",\n  \"description\":      \"Revenue contribution from North India\",\n  \"type\":             \"quantitative\",\n  \"period\":           \"annual\",\n  \"update_frequency\": \"monthly\",\n  \"target_value\":     40000000,\n  \"unit\":             \"$\",\n  \"allocation_pct\":   40,\n  \"owner_id\":         \"{{user_id}}\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/kpis/{{kpi_id}}/cascade", "host": ["{{base_url}}"], "path": ["api","kpis","{{kpi_id}}","cascade"] }
+          }
+        },
+        {
+          "name": "Link Existing KPI as Child",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"allocation_pct\": 30\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/kpis/{{kpi_id}}/cascade/CHILD_KPI_ID",
+              "host": ["{{base_url}}"],
+              "path": ["api","kpis","{{kpi_id}}","cascade","CHILD_KPI_ID"]
+            }
+          }
+        },
+        {
+          "name": "Remove Child KPI (cancel)",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/kpis/{{kpi_id}}/cascade/CHILD_KPI_ID",
+              "host": ["{{base_url}}"],
+              "path": ["api","kpis","{{kpi_id}}","cascade","CHILD_KPI_ID"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "👥 Contributors",
+      "item": [
+        {
+          "name": "Add / Update Contributor",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\":        \"{{user_id}}\",\n  \"role\":           \"contributor\",\n  \"allocation_pct\": 25\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/kpis/{{kpi_id}}/contributors", "host": ["{{base_url}}"], "path": ["api","kpis","{{kpi_id}}","contributors"] }
+          }
+        },
+        {
+          "name": "Remove Contributor",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/kpis/{{kpi_id}}/contributors/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api","kpis","{{kpi_id}}","contributors","{{user_id}}"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "✅ Approvals",
+      "item": [
+        {
+          "name": "List Approvals",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/approvals?page=1&limit=20&status=pending&kpi_id=&requested_by=",
+              "host": ["{{base_url}}"],
+              "path": ["api","approvals"],
+              "query": [
+                { "key": "page",         "value": "1",       "description": "Page number" },
+                { "key": "limit",        "value": "20",      "description": "Items per page" },
+                { "key": "status",       "value": "pending", "description": "pending | approved | rejected" },
+                { "key": "kpi_id",       "value": "",        "description": "Filter by KPI UUID" },
+                { "key": "requested_by", "value": "",        "description": "Filter by requester UUID" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Pending Count",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/approvals/count/pending", "host": ["{{base_url}}"], "path": ["api","approvals","count","pending"] }
+          }
+        },
+        {
+          "name": "Get Approval by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/approvals/{{approval_id}}", "host": ["{{base_url}}"], "path": ["api","approvals","{{approval_id}}"] }
+          }
+        },
+        {
+          "name": "Request Approval",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kpi_id\": \"{{kpi_id}}\",\n  \"note\":   \"Requesting approval to activate this KPI for Q1 2025 tracking.\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/approvals", "host": ["{{base_url}}"], "path": ["api","approvals"] }
+          }
+        },
+        {
+          "name": "Approve",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reviewer_note\": \"Looks good — targets are aligned with regional plan.\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/approvals/{{approval_id}}/approve", "host": ["{{base_url}}"], "path": ["api","approvals","{{approval_id}}","approve"] }
+          }
+        },
+        {
+          "name": "Reject",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reviewer_note\": \"Target value seems too low — please revise to match Q1 forecast.\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/approvals/{{approval_id}}/reject", "host": ["{{base_url}}"], "path": ["api","approvals","{{approval_id}}","reject"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🔔 Notifications",
+      "item": [
+        {
+          "name": "List Notifications",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/notifications?page=1&limit=20&unread_only=false",
+              "host": ["{{base_url}}"],
+              "path": ["api","notifications"],
+              "query": [
+                { "key": "page",        "value": "1",     "description": "Page number" },
+                { "key": "limit",       "value": "20",    "description": "Items per page" },
+                { "key": "unread_only", "value": "false", "description": "true = only unread" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Unread Count",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/notifications/count/unread", "host": ["{{base_url}}"], "path": ["api","notifications","count","unread"] }
+          }
+        },
+        {
+          "name": "Mark One as Read",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/api/notifications/NOTIFICATION_ID/read",
+              "host": ["{{base_url}}"],
+              "path": ["api","notifications","NOTIFICATION_ID","read"]
+            }
+          }
+        },
+        {
+          "name": "Mark All as Read",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{base_url}}/api/notifications/read-all", "host": ["{{base_url}}"], "path": ["api","notifications","read-all"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "📋 Templates",
+      "item": [
+        {
+          "name": "List Templates",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/templates", "host": ["{{base_url}}"], "path": ["api","templates"] }
+          }
+        },
+        {
+          "name": "Get Template by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/templates/{{template_id}}", "host": ["{{base_url}}"], "path": ["api","templates","{{template_id}}"] }
+          }
+        },
+        {
+          "name": "Create Template",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\":     \"Sales Revenue KPI\",\n  \"category\": \"Finance\",\n  \"icon\":     \"💰\",\n  \"fields\": [\n    { \"id\": \"kpi_name\",      \"label\": \"KPI Name\",      \"type\": \"text\",       \"required\": true },\n    { \"id\": \"region\",        \"label\": \"Region\",        \"type\": \"dropdown\",   \"required\": true },\n    { \"id\": \"target_value\",  \"label\": \"Target Value\",  \"type\": \"currency\",   \"required\": true },\n    { \"id\": \"period\",        \"label\": \"Period\",        \"type\": \"dropdown\",   \"required\": true,  \"opts\": [\"FY2025\",\"FY2026\"] },\n    { \"id\": \"start_date\",   \"label\": \"Start Date\",    \"type\": \"date\",       \"required\": false },\n    { \"id\": \"description\",  \"label\": \"Description\",   \"type\": \"textarea\",   \"required\": false }\n  ]\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/templates", "host": ["{{base_url}}"], "path": ["api","templates"] }
+          }
+        },
+        {
+          "name": "Update Template",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\":     \"Sales Revenue KPI v2\",\n  \"category\": \"Finance\",\n  \"icon\":     \"📈\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/templates/{{template_id}}", "host": ["{{base_url}}"], "path": ["api","templates","{{template_id}}"] }
+          }
+        },
+        {
+          "name": "Delete Template",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/api/templates/{{template_id}}", "host": ["{{base_url}}"], "path": ["api","templates","{{template_id}}"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "📜 Audit Log",
+      "item": [
+        {
+          "name": "List Audit Events",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/audit?page=1&limit=20&entity_type=&actor_id=&action=",
+              "host": ["{{base_url}}"],
+              "path": ["api","audit"],
+              "query": [
+                { "key": "page",        "value": "1",  "description": "Page number" },
+                { "key": "limit",       "value": "20", "description": "Items per page" },
+                { "key": "entity_type", "value": "",   "description": "kpi | user | region | approval | template" },
+                { "key": "actor_id",    "value": "",   "description": "UUID of the user who performed the action" },
+                { "key": "action",      "value": "",   "description": "created | updated | cancelled | approved | rejected | deleted" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "❤️ Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"] }
+          }
+        }
+      ]
+    }
+
+  ]
+}
