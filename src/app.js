@@ -12,6 +12,7 @@ const regionsRouter = require('./modules/regions/regions.router');
 const approvalsRouter = require('./modules/approvals/approvals.router');
 const notificationsRouter = require('./modules/notifications/notifications.router');
 const auditRouter = require('./modules/audit/audit.router');
+const templatesRouter = require('./modules/templates/templates.router');
 
 const app = express();
 app.set('trust proxy', 1); // Trust Vercel's proxy
@@ -54,6 +55,7 @@ app.use('/api/notifications', auth);
 app.use('/api/audit',         auth);
 app.use('/api/auth/logout',   auth);
 app.use('/api/auth/me',       auth);
+app.use('/api/templates',     auth);
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/api/auth',          authRouter);
@@ -64,6 +66,7 @@ app.use('/api/regions',       regionsRouter);
 app.use('/api/approvals',     approvalsRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/audit',         auditRouter);
+app.use('/api/templates',     templatesRouter);
 
 // ── 404 handler ───────────────────────────────────────────────────────────────
 app.use((_req, res) => res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Route not found' } }));

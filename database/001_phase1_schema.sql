@@ -226,9 +226,10 @@ BEGIN
       AND  status    <> 'cancelled';
 
     IF (v_total + NEW.allocation_pct) > 100 THEN
-        RAISE EXCEPTION
-            'Cascade allocation overflow: existing children total %.2f%%, adding %.2f%% exceeds 100%%',
-            v_total, NEW.allocation_pct;
+        RAISE EXCEPTION USING MESSAGE =
+            'Cascade allocation overflow: existing children total ' ||
+            round(v_total::numeric, 2)::text || '%, adding ' ||
+            round(NEW.allocation_pct::numeric, 2)::text || '% exceeds 100%';
     END IF;
 
     RETURN NEW;

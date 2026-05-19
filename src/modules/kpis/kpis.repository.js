@@ -58,7 +58,7 @@ const update = async (id, payload) => {
   if (error) {
     // Postgres trigger raises exception for allocation overflow
     if (error.message.includes('Cascade allocation overflow')) {
-      throw new AppError(error.message, 409, 'ALLOCATION_OVERFLOW');
+      throw new AppError(error.message.replace(/\.2f%/g, '%'), 409, 'ALLOCATION_OVERFLOW');
     }
     throw new AppError(error.message, 500, 'DB_ERROR');
   }
