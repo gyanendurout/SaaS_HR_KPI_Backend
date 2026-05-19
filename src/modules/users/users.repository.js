@@ -120,11 +120,12 @@ const findDirectReports = async (managerId) => {
 const findUserKpis = async (userId) => {
   // Fetch owned KPIs and contributed KPIs separately — PostgREST .or() cannot
   // filter across joined tables, so a cross-table OR must be done in two queries.
+  // Use OR on owner_id/created_by to catch KPIs created before the owner_id default was set.
   const [owned, contributed] = await Promise.all([
     supabase
       .from('kpis')
-      .select('id, kpi_number, name, status, level, target_value, current_value, next_due_date')
-      .eq('owner_id', userId)
+      .select('id, kpi_number, name, status, level, target_value, current_value, next_due_date, unit, owner_id, update_frequency')
+      .or(`owner_id.eq.${userId},created_by.eq.${userId}`)
       .neq('status', 'cancelled'),
     supabase
       .from('kpi_contributors')
@@ -141,7 +142,7 @@ const findUserKpis = async (userId) => {
   if (contributedIds.length > 0) {
     const { data: ck, error: cke } = await supabase
       .from('kpis')
-      .select('id, kpi_number, name, status, level, target_value, current_value, next_due_date, unit, owner_id')
+      .select('id, kpi_number, name, status, level, target_value, current_value, next_due_date, unit, owner_id, update_frequency')
       .in('id', contributedIds)
       .neq('status', 'cancelled');
     if (cke) throw new AppError(cke.message, 500, 'DB_ERROR');

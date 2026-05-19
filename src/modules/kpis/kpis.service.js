@@ -27,6 +27,7 @@ const create = async (payload, createdBy) => {
 
   return kpisRepo.create({
     ...payload,
+    owner_id:      payload.owner_id || createdBy,  // default owner to creator
     kpi_number:    kpiNumber,
     next_due_date: nextDueDate,
     created_by:    createdBy,

@@ -17,7 +17,7 @@ const findAll = async ({ page = 1, limit = 20, status, owner_id, region_id } = {
     .range((page - 1) * limit, page * limit - 1);
 
   if (status)    query = query.eq('status', status);
-  if (owner_id)  query = query.eq('owner_id', owner_id);
+  if (owner_id)  query = query.or(`owner_id.eq.${owner_id},created_by.eq.${owner_id}`);
   if (region_id) query = query.eq('region_id', region_id);
 
   const { data, error, count } = await query;
